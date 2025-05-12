@@ -1,5 +1,6 @@
 {
   "name": "docs-renewed",
+  "homepage": "https://macro-consortium.github.io/vla-dashboard/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,11 +8,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deply": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",
     "astronomy-engine": "^2.1.19",
+    "gh-pages": "^6.3.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwindcss": "^4.1.6"

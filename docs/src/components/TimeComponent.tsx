@@ -17,7 +17,7 @@ export default function TimeComponent() {
   });
 
   // const LST_INCREMENT = 0.9973; // Sidereal seconds per standard second
-  const RESYNC_INTERVAL = 60000; // User-defined re-sync interval (e.g., 60 seconds)
+  const RESYNC_INTERVAL = 300000; // User-defined re-sync interval (e.g., 300 seconds)
 
   useEffect(() => {
     const updateLocalTimes = () => {

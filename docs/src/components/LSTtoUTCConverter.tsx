@@ -14,9 +14,6 @@ export default function LSTtoUTCConverter() {
 
   // Get UTC date and time from Astronomy
   const utcDateTime = Astronomy.MakeTime(now);
-  console.log("UTC Date and Time:", utcDateTime.date.toUTCString());
-  console.log("")
-
   const startLST = getLSTfromUTC(utcDateTime);
 
   const [lst, setLST] = useState<string>(

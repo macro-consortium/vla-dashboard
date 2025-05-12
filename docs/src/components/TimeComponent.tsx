@@ -58,8 +58,8 @@ export default function TimeComponent() {
     const updateAllLSTs = async () => {
       const [vla, rlmt, knox] = await Promise.all([
         fetchLST("34.08,-107.6177"),
-        fetchLST("31.6657,110.6018"),
-        fetchLST("40.9417,90.3721"),
+        fetchLST("31.6657,-110.6018"),
+        fetchLST("40.9417,-90.3721"),
       ]);
       setLst1(vla);
       setLst2(rlmt);
@@ -77,11 +77,12 @@ export default function TimeComponent() {
       <div>RLMT LST: {lst2}</div>
       <div>Knox LST: {lst3}</div>
       <div>UTC: {times.utc}</div>
+      <div>Eastern Time: {times.eastern}</div>
       <div>Central Time: {times.central}</div>
+      <div>Mountain Time: {times.mountain}</div>
       <div>AZ Time: {times.arizona}</div>
       <div>Pacific Time: {times.pacific}</div>
-      <div>Mountain Time: {times.mountain}</div>
-      <div>Eastern Time: {times.eastern}</div>
+      
     </div>
   );
 }

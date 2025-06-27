@@ -1,9 +1,11 @@
 import { useState } from "react";
 
 export default function UTCtoLSTConverter() {
+    let datenow = new Date();
     const [lst, setLST] = useState("Awaiting submission...");
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [time, setTime] = useState(new Date().toTimeString().split(' ')[0].substring(0, 8));
+    // Use datenow.getUTCMonth and year and day
+    const [date, setDate] = useState(`${datenow.getUTCFullYear()}-${String(datenow.getUTCMonth() + 1).padStart(2, "0")}-${String(datenow.getUTCDate()).padStart(2, "0")}`);
+    const [time, setTime] = useState(`${String(datenow.getUTCHours()).padStart(2, "0")}:${String(datenow.getUTCMinutes()).padStart(2, "0")}:${String(datenow.getUTCSeconds()).padStart(2, "0")}`);
 
     const fetchLST = async () => {
         const url = `https://aa.usno.navy.mil/api/siderealtime?date=${date}&coords=34.08,-107.6177&reps=1&intv_mag=5&intv_unit=minutes&time=${time}`;

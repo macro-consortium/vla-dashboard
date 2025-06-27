@@ -12,9 +12,14 @@ export default function LSTtoUTCConverter() {
   const observer = new Astronomy.Observer(34.08, -107.6177, 0);
   const now = new Date();
 
+  // Get UTC date and time from Astronomy
+  const utcDateTime = Astronomy.MakeTime(now);
+  const startLST = getLSTfromUTC(utcDateTime);
+
   const [lst, setLST] = useState<string>(
-    now.toTimeString().split(" ")[0].substring(0, 8)
+    startLST || "00:00:00" // Default to 00:00:00 if LST is not available
   );
+
   const [date, setDate] = useState<string>(now.toISOString().split("T")[0]);
   const [result, setResult] = useState<Result>({
     utc: "–",
@@ -45,6 +50,22 @@ export default function LSTtoUTCConverter() {
     })
       .format(date)
       .replace(",", "");
+  }
+
+  // This function should convert an Astronomy.AstroTime object to UTC
+  function getLSTfromUTC(astrotime: Astronomy.AstroTime): string {
+    const sidereal = Astronomy.SiderealTime(astrotime);
+    const siderealLST = normalizeHours(sidereal + observer.longitude / 15);
+
+    const hours = Math.floor(siderealLST);
+    const minutes = Math.floor((siderealLST - hours) * 60);
+    const seconds = Math.floor(
+      ((siderealLST - hours) * 60 - minutes) * 60
+    );
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(seconds).padStart(2, "0")}`;
   }
 
   function convertLST() {

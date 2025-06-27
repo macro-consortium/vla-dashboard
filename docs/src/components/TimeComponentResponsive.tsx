@@ -77,7 +77,7 @@ export default function TimeComponentResponsive() {
   const toggleShow = () => setShow((prev) => !prev);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+    <div className="fixed bottom-0 left-0 right-0 z-50 min-[1550px]:hidden">
       {/* Toggle Button */}
       <div className="flex justify-center mb-1 absolute bottom-24 right-5 z-100">
         <button

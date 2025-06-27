@@ -13,7 +13,7 @@ function App() {
         {/* TimeComponent only shown when toggled */}
         <TimeComponentResponsive />
 
-        <div className="hidden lg:block w-full mt-6">
+        <div className="hidden min-[1550px]:block w-full mt-6">
           <TimeComponent />
         </div>
       </div>

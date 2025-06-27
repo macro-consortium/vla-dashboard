@@ -1,5 +1,5 @@
 {
-  "name": "docs-renewed",
+  "name": "docs",
   "homepage": "https://macro-consortium.github.io/vla-dashboard/",
   "private": true,
   "version": "0.0.0",
@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deply": "gh-pages -d dist"
+    "predeploy": "tsc -b && vite build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",

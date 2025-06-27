@@ -57,7 +57,7 @@ export default function LSTtoUTCConverter() {
 
     for (let minutes = 0; minutes < 1440; minutes++) {
       const testTime = time.AddDays(minutes / 1440);
-      const sidereal = Astronomy.SiderealTime(testTime, observer.longitude);
+      const sidereal = Astronomy.SiderealTime(testTime);
       const siderealLST = normalizeHours(sidereal + observer.longitude / 15);
       let diff = Math.abs(normalizeHours(siderealLST - targetLST));
       if (diff > 12) diff = 24 - diff;

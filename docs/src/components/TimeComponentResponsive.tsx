@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-export default function TimeComponent() {
+export default function TimeComponentResponsive() {
+  const [show, setShow] = useState(false);
   const [times, setTimes] = useState({
     utc: "",
     central: "",
@@ -67,21 +70,52 @@ export default function TimeComponent() {
     };
 
     updateAllLSTs();
-    const interval = setInterval(updateAllLSTs, 60000); // every 60s
+    const interval = setInterval(updateAllLSTs, 60000);
     return () => clearInterval(interval);
   }, []);
 
+  const toggleShow = () => setShow((prev) => !prev);
+
   return (
-    <div className="fixed top-0 right-0 p-4 text-sm md:text-base font-mono bg-black text-white z-50 space-y-1">
-      <div>VLA LST: {lst1}</div>
-      <div>RLMT LST: {lst2}</div>
-      <div>Knox LST: {lst3}</div>
-      <div>UTC: {times.utc}</div>
-      <div>Central Time: {times.central}</div>
-      <div>AZ Time: {times.arizona}</div>
-      <div>Pacific Time: {times.pacific}</div>
-      <div>Mountain Time: {times.mountain}</div>
-      <div>Eastern Time: {times.eastern}</div>
+    <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+      {/* Toggle Button */}
+      <div className="flex justify-center mb-1 absolute bottom-24 right-5 z-100">
+        <button
+          className="bg-gray-700 hover:bg-gray-600 text-white rounded-full w-10 h-10 shadow-lg flex items-center justify-center transition"
+          onClick={toggleShow}
+          aria-label="Toggle time display"
+        >
+          {show ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+        </button>
+      </div>
+
+      {/* Slide Panel */}
+      <div
+        className={`transition-all duration-300 transform ${
+          show ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0"
+        } origin-bottom bg-black text-white font-mono px-4 py-4 text-sm md:text-base shadow-inner`}
+        style={{ transformOrigin: "bottom" }}
+      >
+        <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-start flex-wrap">
+          <div className="flex flex-col gap-1">
+            <div>VLA LST: {lst1}</div>
+            <div>RLMT LST: {lst2}</div>
+            <div>Knox LST: {lst3}</div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div>UTC: {times.utc}</div>
+            <div>Central Time: {times.central}</div>
+            <div>AZ Time: {times.arizona}</div>
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <div>Pacific Time: {times.pacific}</div>
+            <div>Mountain Time: {times.mountain}</div>
+            <div>Eastern Time: {times.eastern}</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

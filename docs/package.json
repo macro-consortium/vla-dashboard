@@ -13,6 +13,10 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.1.2",
+    "@mui/material": "^7.1.2",
     "@tailwindcss/vite": "^4.1.6",
     "astronomy-engine": "^2.1.19",
     "gh-pages": "^6.3.0",

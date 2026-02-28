@@ -38,7 +38,7 @@ export default function TimeComponent() {
     const fetchLST = async (coords: string) => {
       const now = new Date();
       const date = now.toISOString().split("T")[0];
-      const time = now.toTimeString().split(" ")[0];
+      const time = now.toISOString().split("T")[1].split(".")[0];
 
       const url = `https://aa.usno.navy.mil/api/siderealtime?date=${date}&coords=${coords}&reps=1&intv_mag=5&intv_unit=minutes&time=${time}`;
 
@@ -58,8 +58,8 @@ export default function TimeComponent() {
     const updateAllLSTs = async () => {
       const [vla, rlmt, knox] = await Promise.all([
         fetchLST("34.08,-107.6177"),
-        fetchLST("31.6657,110.6018"),
-        fetchLST("40.9417,90.3721"),
+        fetchLST("31.6657,-110.6018"),
+        fetchLST("40.9417,-90.3721"),
       ]);
       setLst1(vla);
       setLst2(rlmt);

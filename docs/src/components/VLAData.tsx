@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Info from "./Info";
+import { useTheme } from "../context/ThemeContext";
 
 interface ObservationData {
   telescope: string;
@@ -15,6 +16,7 @@ interface ObservationData {
 
 export default function VLAData() {
   const [data, setData] = useState<ObservationData | null>(null);
+  const { isDark } = useTheme();
 
   const fetchData = async () => {
     try {
@@ -38,11 +40,18 @@ export default function VLAData() {
   }, []);
 
   return (
-    <div className="bg-white p-6 w-full max-w-3xl rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4">Current VLA Observation</h2>
-      <p>Data from <a href="https://data-query.nrao.edu/accumulator/vla" className="text-blue-600 underline">The ACCUMULATOR</a></p>
+    <div>
+      <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+        Data from{" "}
+        <a
+          href="https://data-query.nrao.edu/accumulator/vla"
+          className="text-blue-500 underline hover:text-blue-400"
+        >
+          The ACCUMULATOR
+        </a>
+      </p>
       {data ? (
-        <div className="space-y-3">
+        <div className="space-y-3 mt-4">
           <Info label="Telescope" value={data.telescope} different={false} />
           <Info label="Proposal Code" value={data.proposal_code} different={false} />
           <Info label="Proposal Title" value={data.proposal_title} different={false} />
@@ -54,11 +63,11 @@ export default function VLAData() {
           <Info label="Source DEC" value={data.source_dec} different={false} />
         </div>
       ) : (
-        <p>Loading...</p>
+        <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
       )}
-      <p className="mt-5 text-md">
-        <span className="text-gray-700 text-lg">Note:</span> If the VLA is undergoing daily maintenance, this data
-        may be out of date.
+      <p className={`mt-5 text-md ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+        <span className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}>Note:</span>{" "}
+        If the VLA is undergoing daily maintenance, this data may be out of date.
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import * as Astronomy from "astronomy-engine";
+import { useTheme } from "../context/ThemeContext";
 
 type Result = {
   utc: string;
@@ -9,17 +10,14 @@ type Result = {
 };
 
 export default function LSTtoUTCConverter() {
+  const { isDark } = useTheme();
   const observer = new Astronomy.Observer(34.08, -107.6177, 0);
   const now = new Date();
 
-  // Get UTC date and time from Astronomy
   const utcDateTime = Astronomy.MakeTime(now);
   const startLST = getLSTfromUTC(utcDateTime);
 
-  const [lst, setLST] = useState<string>(
-    startLST || "00:00:00" // Default to 00:00:00 if LST is not available
-  );
-
+  const [lst, setLST] = useState<string>(startLST || "00:00:00");
   const [date, setDate] = useState<string>(now.toISOString().split("T")[0]);
   const [result, setResult] = useState<Result>({
     utc: "–",
@@ -52,20 +50,14 @@ export default function LSTtoUTCConverter() {
       .replace(",", "");
   }
 
-  // This function should convert an Astronomy.AstroTime object to UTC
   function getLSTfromUTC(astrotime: Astronomy.AstroTime): string {
     const sidereal = Astronomy.SiderealTime(astrotime);
     const siderealLST = normalizeHours(sidereal + observer.longitude / 15);
 
     const hours = Math.floor(siderealLST);
     const minutes = Math.floor((siderealLST - hours) * 60);
-    const seconds = Math.floor(
-      ((siderealLST - hours) * 60 - minutes) * 60
-    );
-    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
-      2,
-      "0"
-    )}:${String(seconds).padStart(2, "0")}`;
+    const seconds = Math.floor(((siderealLST - hours) * 60 - minutes) * 60);
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   }
 
   function convertLST() {
@@ -101,30 +93,39 @@ export default function LSTtoUTCConverter() {
     }
   }
 
+  const inputClass = `border rounded px-2 py-1 mb-3 w-full ${
+    isDark
+      ? "bg-gray-700 border-gray-600 text-gray-100"
+      : "bg-white border-gray-300 text-gray-900"
+  }`;
+
   return (
-    <div className="bg-white mt-6 p-4 w-full max-w-3xl rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold">LST to UTC Converter (VLA Site)</h2>
-      <label className="block mb-1">LST (HH:MM:SS):</label>
+    <div>
+      <label className={`block mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+        LST (HH:MM:SS):
+      </label>
       <input
         type="text"
         value={lst}
         onChange={(e) => setLST(e.target.value)}
-        className="border rounded px-2 py-1 mb-3 w-full"
+        className={inputClass}
       />
-      <label className="block mb-1">Date (YYYY-MM-DD):</label>
+      <label className={`block mb-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+        Date (YYYY-MM-DD):
+      </label>
       <input
         type="date"
         value={date}
         onChange={(e) => setDate(e.target.value)}
-        className="border rounded px-2 py-1 mb-3 w-full"
+        className={inputClass}
       />
       <button
         onClick={convertLST}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
       >
         Convert to UTC
       </button>
-      <div className="mt-4">
+      <div className={`mt-4 ${isDark ? "text-gray-200" : "text-gray-800"}`}>
         <p>
           <strong>Result UTC:</strong> {result.utc}
         </p>

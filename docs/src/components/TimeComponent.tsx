@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 export default function TimeComponent() {
+  const [show, setShow] = useState(false);
   const [times, setTimes] = useState({
     utc: "",
     central: "",
@@ -71,17 +74,38 @@ export default function TimeComponent() {
     return () => clearInterval(interval);
   }, []);
 
+  const toggleShow = () => setShow((prev) => !prev);
+
   return (
-    <div className="fixed top-0 right-0 p-4 text-sm md:text-base font-mono bg-black text-white z-50 space-y-1">
-      <div>VLA LST: {lst1}</div>
-      <div>RLMT LST: {lst2}</div>
-      <div>Knox LST: {lst3}</div>
-      <div>UTC: {times.utc}</div>
-      <div>Central Time: {times.central}</div>
-      <div>AZ Time: {times.arizona}</div>
-      <div>Pacific Time: {times.pacific}</div>
-      <div>Mountain Time: {times.mountain}</div>
-      <div>Eastern Time: {times.eastern}</div>
+    <div className="fixed top-0 right-0 z-50">
+      {/* Toggle Button */}
+      <button
+        onClick={toggleShow}
+        className="absolute top-4 right-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full w-10 h-10 shadow-lg flex items-center justify-center transition z-50"
+        aria-label="Toggle time display"
+      >
+        {show ? <ExpandLessIcon /> : <AccessTimeIcon />}
+      </button>
+
+      {/* Slide Panel */}
+      <div
+        className={`transition-all duration-300 transform ${
+          show ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+        } bg-black text-white font-mono p-4 text-sm md:text-base shadow-lg rounded-bl-lg`}
+        style={{ marginTop: "60px" }}
+      >
+        <div className="space-y-1">
+          <div>VLA LST: {lst1}</div>
+          <div>RLMT LST: {lst2}</div>
+          <div>Knox LST: {lst3}</div>
+          <div className="border-t border-gray-700 my-2 pt-2">UTC: {times.utc}</div>
+          <div>Central Time: {times.central}</div>
+          <div>AZ Time: {times.arizona}</div>
+          <div>Pacific Time: {times.pacific}</div>
+          <div>Mountain Time: {times.mountain}</div>
+          <div>Eastern Time: {times.eastern}</div>
+        </div>
+      </div>
     </div>
   );
 }

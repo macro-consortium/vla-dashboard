@@ -7,7 +7,8 @@ export type ModuleId =
   | "UTCtoLSTConverter"
   | "LSTtoUTCConverter"
   | "VLAScheduleFrame"
-  | "VLAAntennaFrame";
+  | "VLAAntennaFrame"
+  | "VLAWebcam";
 
 export type LayoutMode = "auto" | "single" | "double" | "triple";
 
@@ -23,6 +24,7 @@ interface DashboardContextType {
 const DEFAULT_ORDER: ModuleId[] = [
   "VLAData",
   "VLANowFrame",
+  "VLAWebcam",
   "UTCtoLSTConverter",
   "LSTtoUTCConverter",
   "VLAScheduleFrame",
@@ -46,9 +48,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     const saved = getCookie("vla-module-order");
     if (saved) {
       try {
-        const parsed = JSON.parse(decodeURIComponent(saved));
-        if (Array.isArray(parsed) && parsed.length === DEFAULT_ORDER.length) {
-          return parsed as ModuleId[];
+        const parsed = JSON.parse(decodeURIComponent(saved)) as ModuleId[];
+        // Validate that all default modules are present
+        const hasAllModules = DEFAULT_ORDER.every((id) => parsed.includes(id));
+        const hasOnlyValidModules = parsed.every((id) => DEFAULT_ORDER.includes(id));
+        if (Array.isArray(parsed) && hasAllModules && hasOnlyValidModules) {
+          return parsed;
         }
       } catch {
         // ignore

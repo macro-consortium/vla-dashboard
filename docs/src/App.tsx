@@ -8,6 +8,7 @@ import TimeComponent from "./components/TimeComponent";
 import TimeComponentResponsive from "./components/TimeComponentResponsive";
 import VLAScheduleFrame, { VLA_SCHEDULE_PDF_URL } from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
+import VLAWebcam, { VLA_WEBCAM_URL } from "./components/VLAWebcam";
 import ModuleWrapper from "./components/ModuleWrapper";
 import SettingsPanel from "./components/SettingsPanel";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
@@ -48,6 +49,11 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
     title: "VLA Antenna Positions",
     component: <VLAAntennaFrame />,
     popOutUrl: VLA_ANTENNA_PDF_URL,
+  },
+  VLAWebcam: {
+    title: "VLA Webcam",
+    component: <VLAWebcam />,
+    popOutUrl: VLA_WEBCAM_URL,
   },
 };
 

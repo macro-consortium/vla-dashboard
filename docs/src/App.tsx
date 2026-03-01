@@ -4,6 +4,8 @@ import UTCtoLSTConverter from "./components/UTCtoLSTConverter";
 import LSTtoUTCConverter from "./components/LSTtoUTCConverter";
 import TimeComponent from "./components/TimeComponent";
 import TimeComponentResponsive from "./components/TimeComponentResponsive";
+import VLAScheduleFrame from "./components/VLAScheduleFrame";
+import VLAAntennaFrame from "./components/VLAAntennaFrame";
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
       <VLANowFrame />
       <UTCtoLSTConverter />
       <LSTtoUTCConverter />
+      <VLAScheduleFrame />
+      <VLAAntennaFrame />
 
       <p className="mt-10 text-center text-gray-600">
         View source and contribute on{" "}

@@ -9,6 +9,7 @@ import TimeComponentResponsive from "./components/TimeComponentResponsive";
 import VLAScheduleFrame, { VLA_SCHEDULE_PDF_URL } from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
 import VLAWebcam, { VLA_WEBCAM_URL } from "./components/VLAWebcam";
+import VLAObsLogs, { VLA_OBS_LOGS_URL } from "./components/VLAObsLogs";
 import ModuleWrapper from "./components/ModuleWrapper";
 import SettingsPanel from "./components/SettingsPanel";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
@@ -55,11 +56,16 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
     component: <VLAWebcam />,
     popOutUrl: VLA_WEBCAM_URL,
   },
+  VLAObsLogs: {
+    title: "VLA Observation Logs",
+    component: <VLAObsLogs />,
+    popOutUrl: VLA_OBS_LOGS_URL,
+  },
 };
 
 function DashboardContent() {
   const { isDark } = useTheme();
-  const { moduleOrder, moveModule, layoutMode } = useDashboard();
+  const { moduleOrder, moveModule, layoutMode, moduleSpans, setModuleSpan } = useDashboard();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -84,6 +90,21 @@ function DashboardContent() {
     setDraggedIndex(null);
     setDragOverIndex(null);
   };
+
+  const getMaxColumns = () => {
+    switch (layoutMode) {
+      case "single":
+        return 1;
+      case "double":
+        return 2;
+      case "triple":
+      case "auto":
+      default:
+        return 3;
+    }
+  };
+
+  const maxColumns = getMaxColumns();
 
   const getGridClasses = () => {
     switch (layoutMode) {
@@ -131,10 +152,13 @@ function DashboardContent() {
       <div
         className={`w-full ${
           layoutMode === "single" ? "" : "max-w-7xl"
-        } grid ${getGridClasses()} gap-6 items-start`}
+        } grid ${getGridClasses()} gap-6 grid-flow-dense auto-rows-auto`}
       >
         {moduleOrder.map((moduleId, index) => {
           const config = MODULE_CONFIGS[moduleId];
+          const savedSpan = moduleSpans[moduleId];
+          const colSpan = Math.min(savedSpan?.col ?? 1, maxColumns);
+          const rowSpan = savedSpan?.row ?? 1;
           return (
             <ModuleWrapper
               key={moduleId}
@@ -146,6 +170,10 @@ function DashboardContent() {
               onDrop={handleDrop}
               isDragging={draggedIndex === index}
               dragOverIndex={dragOverIndex}
+              colSpan={colSpan}
+              rowSpan={rowSpan}
+              maxColumns={maxColumns}
+              onSpanChange={(col, row) => setModuleSpan(moduleId, col, row)}
             >
               {config.component}
             </ModuleWrapper>

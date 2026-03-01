@@ -1,26 +1,61 @@
+import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 
 export const VLA_SCHEDULE_PDF_URL = "https://www.aoc.nrao.edu/~schedsoc/new_sched/current.pdf";
+export const VLA_FUTURE_PDF_URL = "https://www.aoc.nrao.edu/~schedsoc/new_sched/future.pdf";
+
+type ScheduleTab = "current" | "future";
 
 export default function VLAScheduleFrame() {
   const { isDark } = useTheme();
+  const [activeTab, setActiveTab] = useState<ScheduleTab>("current");
+
+  const tabs: { id: ScheduleTab; label: string; url: string }[] = [
+    { id: "current", label: "Current", url: VLA_SCHEDULE_PDF_URL },
+    { id: "future", label: "Future", url: VLA_FUTURE_PDF_URL },
+  ];
+
+  const activeUrl = activeTab === "current" ? VLA_SCHEDULE_PDF_URL : VLA_FUTURE_PDF_URL;
 
   return (
     <div>
+      {/* Tab buttons */}
+      <div className="flex mb-3 gap-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-sm font-medium rounded-t transition-colors ${
+              activeTab === tab.id
+                ? isDark
+                  ? "bg-gray-700 text-white"
+                  : "bg-blue-500 text-white"
+                : isDark
+                  ? "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <iframe
-        src={VLA_SCHEDULE_PDF_URL}
+        src={activeUrl}
         width="720"
         height="480"
         className={`w-full rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
-        title="VLA Schedule Frame"
+        title={`VLA Schedule - ${activeTab === "current" ? "Current" : "Future"}`}
       />
       <p className={`mt-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
         Data from{" "}
         <a
-          href={VLA_SCHEDULE_PDF_URL}
+          href={activeUrl}
           className="text-blue-500 underline hover:text-blue-400"
+          target="_blank"
+          rel="noopener noreferrer"
         >
-          VLA Schedule
+          VLA {activeTab === "current" ? "Current" : "Future"} Schedule
         </a>
         .
       </p>

@@ -35,7 +35,8 @@ const LST_LOCATIONS: LSTLocation[] = [
 export default function TimeBar() {
   const { isDark } = useTheme();
   const { timeBarSticky, setTimeBarSticky } = useDashboard();
-  const [expanded, setExpanded] = useState(false);
+  const { timeBarExpanded, setTimeBarExpanded } = useDashboard();
+  const [expanded, setExpanded] = useState(timeBarExpanded);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lstTimes, setLstTimes] = useState<Record<string, string>>({});
   const [lstLoading, setLstLoading] = useState(true);
@@ -125,7 +126,10 @@ export default function TimeBar() {
     >
       {/* Compact Always-Visible Bar */}
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => {
+          setExpanded(!expanded);
+          setTimeBarExpanded(!expanded);
+        }}
         className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${
           isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
         }`}

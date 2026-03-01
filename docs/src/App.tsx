@@ -9,6 +9,7 @@ import VLAScheduleFrame from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
 import VLAWebcam, { VLA_WEBCAM_URL } from "./components/VLAWebcam";
 import VLAObsLogs, { VLA_OBS_LOGS_URL } from "./components/VLAObsLogs";
+import VLAPressurePlot from "./components/VLAPressurePlot";
 import ModuleWrapper from "./components/ModuleWrapper";
 import SettingsPanel from "./components/SettingsPanel";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
@@ -58,6 +59,10 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
     title: "VLA Observation Logs",
     component: <VLAObsLogs />,
     popOutUrl: VLA_OBS_LOGS_URL,
+  },
+  VLAPressurePlot: {
+    title: "VLA Pressure Plot",
+    component: <VLAPressurePlot />,
   },
 };
 

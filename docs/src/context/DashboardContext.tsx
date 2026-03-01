@@ -9,7 +9,8 @@ export type ModuleId =
   | "VLAScheduleFrame"
   | "VLAAntennaFrame"
   | "VLAWebcam"
-  | "VLAObsLogs";
+  | "VLAObsLogs"
+  | "VLAPressurePlot";
 
 export type LayoutMode = "auto" | "single" | "double" | "triple";
 
@@ -44,6 +45,7 @@ const DEFAULT_ORDER: ModuleId[] = [
   "UTCtoLSTConverter",
   "VLAAntennaFrame",
   "LSTtoUTCConverter",
+  "VLAPressurePlot",
 ];
 
 const DEFAULT_SPANS: ModuleSpans = {
@@ -52,6 +54,7 @@ const DEFAULT_SPANS: ModuleSpans = {
   VLAScheduleFrame: { col: 2, row: 1 },
   VLAAntennaFrame: { col: 2, row: 1 },
   VLAObsLogs: { col: 2, row: 1 },
+  VLAPressurePlot: { col: 2, row: 1 },
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -143,8 +146,13 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setCookie("vla-timebar-sticky", String(timeBarSticky));
   }, [timeBarSticky]);
 
+  useEffect(() => {
+    setCookie("vla-timebar-expanded", String(timeBarExpanded));
+  }, [timeBarExpanded]);
+
   const setModuleOrder = (order: ModuleId[]) => setModuleOrderState(order);
   const setTimeBarSticky = (sticky: boolean) => setTimeBarStickyState(sticky);
+  const setTimeBarExpanded = (expanded: boolean) => setTimeBarExpandedState(expanded);
 
   const moveModule = (fromIndex: number, toIndex: number) => {
     const newOrder = [...moduleOrder];
@@ -169,7 +177,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   return (
     <DashboardContext.Provider
-      value={{ moduleOrder, setModuleOrder, moveModule, layoutMode, setLayoutMode, moduleSpans, setModuleSpan, resetOrder, timeBarSticky, setTimeBarSticky }}
+      value={{ moduleOrder, setModuleOrder, moveModule, layoutMode, setLayoutMode, moduleSpans, setModuleSpan, resetOrder, timeBarSticky, setTimeBarSticky, timeBarExpanded, setTimeBarExpanded }}
     >
       {children}
     </DashboardContext.Provider>

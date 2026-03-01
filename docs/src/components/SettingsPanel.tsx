@@ -89,7 +89,7 @@ export default function SettingsPanel() {
       </div>
 
       <p className={`mt-3 text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-        Drag modules to reorder. Use width/height controls on each module to adjust span. Preferences saved automatically.
+        Drag modules by their header to reorder. Click the grid icon on each module to resize. Preferences are saved automatically.
       </p>
     </div>
   );

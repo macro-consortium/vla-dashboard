@@ -29,6 +29,10 @@ interface DashboardContextType {
   moduleSpans: ModuleSpans;
   setModuleSpan: (moduleId: ModuleId, col: number, row: number) => void;
   resetOrder: () => void;
+  timeBarSticky: boolean;
+  setTimeBarSticky: (sticky: boolean) => void;
+  timeBarExpanded: boolean;
+  setTimeBarExpanded: (expanded: boolean) => void;
 }
 
 const DEFAULT_ORDER: ModuleId[] = [
@@ -44,7 +48,7 @@ const DEFAULT_ORDER: ModuleId[] = [
 
 const DEFAULT_SPANS: ModuleSpans = {
   VLAData: { col: 2, row: 1 },
-  VLAWebcam: { col: 2, row: 1 },
+  VLAWebcam: { col: 3, row: 1 },
   VLAScheduleFrame: { col: 2, row: 1 },
   VLAAntennaFrame: { col: 2, row: 1 },
   VLAObsLogs: { col: 2, row: 1 },
@@ -113,6 +117,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return DEFAULT_SPANS;
   });
 
+  const [timeBarSticky, setTimeBarStickyState] = useState<boolean>(() => {
+    const saved = getCookie("vla-timebar-sticky");
+    return saved === "true";
+  });
+
+  const [timeBarExpanded, setTimeBarExpandedState] = useState<boolean>(() => {
+    const saved = getCookie("vla-timebar-expanded");
+    return saved === "true";
+  });
+
   useEffect(() => {
     setCookie("vla-module-order", encodeURIComponent(JSON.stringify(moduleOrder)));
   }, [moduleOrder]);
@@ -125,7 +139,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setCookie("vla-module-spans", encodeURIComponent(JSON.stringify(moduleSpans)));
   }, [moduleSpans]);
 
+  useEffect(() => {
+    setCookie("vla-timebar-sticky", String(timeBarSticky));
+  }, [timeBarSticky]);
+
   const setModuleOrder = (order: ModuleId[]) => setModuleOrderState(order);
+  const setTimeBarSticky = (sticky: boolean) => setTimeBarStickyState(sticky);
 
   const moveModule = (fromIndex: number, toIndex: number) => {
     const newOrder = [...moduleOrder];
@@ -150,7 +169,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   return (
     <DashboardContext.Provider
-      value={{ moduleOrder, setModuleOrder, moveModule, layoutMode, setLayoutMode, moduleSpans, setModuleSpan, resetOrder }}
+      value={{ moduleOrder, setModuleOrder, moveModule, layoutMode, setLayoutMode, moduleSpans, setModuleSpan, resetOrder, timeBarSticky, setTimeBarSticky }}
     >
       {children}
     </DashboardContext.Provider>

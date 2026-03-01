@@ -6,24 +6,43 @@ const VLA_WEBCAM_IMAGE = "https://public.nrao.edu/wp-content/uploads/temp/vla_we
 
 export default function VLAWebcam() {
   const { isDark } = useTheme();
-  const [imageKey, setImageKey] = useState(Date.now());
+  const [currentSrc, setCurrentSrc] = useState(`${VLA_WEBCAM_IMAGE}?t=${Date.now()}`);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Refresh the image every 15 seconds to match the webcam update rate
+  // Preload new image before swapping to prevent layout shift
   useEffect(() => {
     const interval = setInterval(() => {
-      setImageKey(Date.now());
+      const newSrc = `${VLA_WEBCAM_IMAGE}?t=${Date.now()}`;
+      const img = new Image();
+      img.onload = () => {
+        setCurrentSrc(newSrc);
+      };
+      img.src = newSrc;
     }, 15000);
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div>
-      <img
-        key={imageKey}
-        src={`${VLA_WEBCAM_IMAGE}?t=${imageKey}`}
-        alt="VLA Webcam Live View"
-        className={`w-full rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
-      />
+      {/* Fixed aspect ratio container to prevent layout shift on refresh */}
+      <div
+        className={`relative w-full rounded border overflow-hidden ${isDark ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-200"}`}
+        style={{ aspectRatio: "16 / 9" }}
+      >
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`text-sm ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Loading webcam...
+            </span>
+          </div>
+        )}
+        <img
+          src={currentSrc}
+          alt="VLA Webcam Live View"
+          className="w-full h-full object-cover"
+          onLoad={() => setIsLoading(false)}
+        />
+      </div>
       <p className={`mt-2 text-xs ${isDark ? "text-gray-400" : "text-gray-500"}`}>
         Image refreshes every 15 seconds
       </p>

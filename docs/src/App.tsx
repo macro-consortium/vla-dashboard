@@ -4,9 +4,8 @@ import VLAData from "./components/VLAData";
 import VLANowFrame from "./components/VLANowFrame";
 import UTCtoLSTConverter from "./components/UTCtoLSTConverter";
 import LSTtoUTCConverter from "./components/LSTtoUTCConverter";
-import TimeComponent from "./components/TimeComponent";
-import TimeComponentResponsive from "./components/TimeComponentResponsive";
-import VLAScheduleFrame, { VLA_SCHEDULE_PDF_URL } from "./components/VLAScheduleFrame";
+import TimeBar from "./components/TimeBar";
+import VLAScheduleFrame from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
 import VLAWebcam, { VLA_WEBCAM_URL } from "./components/VLAWebcam";
 import VLAObsLogs, { VLA_OBS_LOGS_URL } from "./components/VLAObsLogs";
@@ -44,7 +43,6 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
   VLAScheduleFrame: {
     title: "VLA Monthly Schedule",
     component: <VLAScheduleFrame />,
-    popOutUrl: VLA_SCHEDULE_PDF_URL,
   },
   VLAAntennaFrame: {
     title: "VLA Antenna Positions",
@@ -65,7 +63,7 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
 
 function DashboardContent() {
   const { isDark } = useTheme();
-  const { moduleOrder, moveModule, layoutMode, moduleSpans, setModuleSpan } = useDashboard();
+  const { moduleOrder, moveModule, layoutMode, moduleSpans, setModuleSpan, timeBarSticky } = useDashboard();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -127,7 +125,7 @@ function DashboardContent() {
       }`}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col gap-5 items-center my-6 w-full max-w-7xl">
+      <div className="flex flex-col gap-4 items-center mt-6 mb-4 w-full max-w-7xl 2xl:max-w-[80%]">
         <h1
           className={`text-3xl font-bold text-center ${
             isDark ? "text-white" : "text-gray-900"
@@ -135,15 +133,15 @@ function DashboardContent() {
         >
           VLA Dashboard
         </h1>
-        <TimeComponentResponsive />
-        <div className="hidden min-[1550px]:block w-full mt-6">
-          <TimeComponent />
-        </div>
+      </div>
+
+      <div className={`w-full max-w-7xl 2xl:max-w-[80%] mb-4 ${timeBarSticky ? "sticky top-0 z-40" : ""}`}>
+        <TimeBar />
       </div>
 
       <div
         className={`w-full ${
-          layoutMode === "single" ? "max-w-3xl" : "max-w-7xl"
+          layoutMode === "single" ? "max-w-3xl" : "max-w-7xl 2xl:max-w-[80%]"
         } mx-auto`}
       >
         <SettingsPanel />
@@ -151,7 +149,7 @@ function DashboardContent() {
 
       <div
         className={`w-full ${
-          layoutMode === "single" ? "" : "max-w-7xl"
+          layoutMode === "single" ? "" : "max-w-7xl 2xl:max-w-[80%]"
         } grid ${getGridClasses()} gap-6 grid-flow-dense auto-rows-auto`}
       >
         {moduleOrder.map((moduleId, index) => {

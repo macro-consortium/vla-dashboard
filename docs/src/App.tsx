@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
+// VLA Components
 import VLAData from "./components/VLAData";
 import VLANowFrame from "./components/VLANowFrame";
 import UTCtoLSTConverter from "./components/UTCtoLSTConverter";
@@ -9,8 +10,18 @@ import VLAScheduleFrame from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
 import VLAWebcam, { VLA_WEBCAM_URL } from "./components/VLAWebcam";
 import VLAObsLogs, { VLA_OBS_LOGS_URL } from "./components/VLAObsLogs";
+import VLAConfigSchedule, { VLA_CONFIG_SCHEDULE_URL } from "./components/VLAConfigSchedule";
+import VLAPressurePlot, { VLA_PRESSURE_PLOT_URL } from "./components/VLAPressurePlot";
+// VLBA Components
+import VLBAData from "./components/VLBAData";
+import VLBAWebcam, { VLBA_WEBCAM_URL } from "./components/VLBAWebcam";
+import VLBAScheduleFrame from "./components/VLBAScheduleFrame";
+import VLBADynamicQueue, { VLBA_DYNAMIC_QUEUE_URL } from "./components/VLBADynamicQueue";
+import VLBARecentlyObserved, { VLBA_RECENTLY_OBSERVED_URL } from "./components/VLBARecentlyObserved";
+// Shared Components
 import ModuleWrapper from "./components/ModuleWrapper";
 import SettingsPanel from "./components/SettingsPanel";
+import TelescopeToggle from "./components/TelescopeToggle";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { DashboardProvider, useDashboard } from "./context/DashboardContext";
 import type { ModuleId } from "./context/DashboardContext";
@@ -22,7 +33,9 @@ interface ModuleConfig {
   popOutUrl?: string;
 }
 
-const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
+// Combined module configs for both VLA and VLBA
+const MODULE_CONFIGS: Record<string, Omit<ModuleConfig, "id">> = {
+  // VLA Modules
   VLAData: {
     title: "Current VLA Observation",
     component: <VLAData />,
@@ -59,11 +72,45 @@ const MODULE_CONFIGS: Record<ModuleId, Omit<ModuleConfig, "id">> = {
     component: <VLAObsLogs />,
     popOutUrl: VLA_OBS_LOGS_URL,
   },
+  VLAConfigSchedule: {
+    title: "VLA Configuration Schedule",
+    component: <VLAConfigSchedule />,
+    popOutUrl: VLA_CONFIG_SCHEDULE_URL,
+  },
+  VLAPressurePlot: {
+    title: "VLA Pressure Plot",
+    component: <VLAPressurePlot />,
+    popOutUrl: VLA_PRESSURE_PLOT_URL,
+  },
+  // VLBA Modules
+  VLBAData: {
+    title: "Current VLBA Observation",
+    component: <VLBAData />,
+  },
+  VLBAWebcam: {
+    title: "VLBA Webcams",
+    component: <VLBAWebcam />,
+    popOutUrl: VLBA_WEBCAM_URL,
+  },
+  VLBAScheduleFrame: {
+    title: "VLBA Schedule",
+    component: <VLBAScheduleFrame />,
+  },
+  VLBADynamicQueue: {
+    title: "VLBA Dynamic Queue",
+    component: <VLBADynamicQueue />,
+    popOutUrl: VLBA_DYNAMIC_QUEUE_URL,
+  },
+  VLBARecentlyObserved: {
+    title: "VLBA Recently Observed",
+    component: <VLBARecentlyObserved />,
+    popOutUrl: VLBA_RECENTLY_OBSERVED_URL,
+  },
 };
 
 function DashboardContent() {
   const { isDark } = useTheme();
-  const { moduleOrder, moveModule, layoutMode, moduleSpans, setModuleSpan, timeBarSticky } = useDashboard();
+  const { telescope, moduleOrder, moveModule, layoutMode, moduleSpans, setModuleSpan, timeBarSticky } = useDashboard();
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
@@ -92,13 +139,16 @@ function DashboardContent() {
   const getMaxColumns = () => {
     switch (layoutMode) {
       case "single":
-        return 1;
-      case "double":
         return 2;
+      case "double":
+        return 4;
       case "triple":
+        return 6;
+      case "quad":
+        return 8;
       case "auto":
       default:
-        return 3;
+        return 6;
     }
   };
 
@@ -107,16 +157,20 @@ function DashboardContent() {
   const getGridClasses = () => {
     switch (layoutMode) {
       case "single":
-        return "grid-cols-1 max-w-3xl mx-auto";
+        return "grid-cols-2 max-w-3xl mx-auto";
       case "double":
-        return "grid-cols-1 lg:grid-cols-2";
+        return "grid-cols-2 lg:grid-cols-4";
       case "triple":
-        return "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3";
+        return "grid-cols-2 lg:grid-cols-4 xl:grid-cols-6";
+      case "quad":
+        return "grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-8";
       case "auto":
       default:
-        return "grid-cols-1 lg:grid-cols-2 xl:grid-cols-3";
+        return "grid-cols-2 lg:grid-cols-4 xl:grid-cols-6";
     }
   };
+
+  const dashboardTitle = telescope === "VLA" ? "VLA Dashboard" : "VLBA Dashboard";
 
   return (
     <div
@@ -126,12 +180,13 @@ function DashboardContent() {
       onDragEnd={handleDragEnd}
     >
       <div className="flex flex-col gap-4 items-center mt-6 mb-4 w-full max-w-7xl 2xl:max-w-[80%]">
+        <TelescopeToggle />
         <h1
           className={`text-3xl font-bold text-center ${
             isDark ? "text-white" : "text-gray-900"
           }`}
         >
-          VLA Dashboard
+          {dashboardTitle}
         </h1>
       </div>
 
@@ -154,6 +209,8 @@ function DashboardContent() {
       >
         {moduleOrder.map((moduleId, index) => {
           const config = MODULE_CONFIGS[moduleId];
+          if (!config) return null; // Skip if module not found
+
           const savedSpan = moduleSpans[moduleId];
           const colSpan = Math.min(savedSpan?.col ?? 1, maxColumns);
           const rowSpan = savedSpan?.row ?? 1;

@@ -6,15 +6,13 @@ export default function VLAAntennaFrame() {
   const { isDark } = useTheme();
 
   return (
-    <div>
+    <div className="flex flex-col h-full min-h-[400px]">
       <iframe
         src={VLA_ANTENNA_PDF_URL}
-        width="720"
-        height="480"
-        className={`w-full rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
+        className={`w-full flex-1 min-h-0 rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
         title="VLA Antenna Positions Frame"
       />
-      <p className={`mt-2 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+      <p className={`mt-2 flex-shrink-0 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
         Data from{" "}
         <a
           href={VLA_ANTENNA_PDF_URL}

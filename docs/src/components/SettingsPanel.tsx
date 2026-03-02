@@ -8,6 +8,7 @@ import ViewStreamIcon from "@mui/icons-material/ViewStream";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import ViewWeekIcon from "@mui/icons-material/ViewWeek";
+import GridViewIcon from "@mui/icons-material/GridView";
 
 export default function SettingsPanel() {
   const { theme, toggleTheme, isDark } = useTheme();
@@ -18,6 +19,7 @@ export default function SettingsPanel() {
     { mode: "single", label: "1 Col", icon: <ViewStreamIcon fontSize="small" /> },
     { mode: "double", label: "2 Col", icon: <ViewColumnIcon fontSize="small" /> },
     { mode: "triple", label: "3 Col", icon: <ViewWeekIcon fontSize="small" /> },
+    { mode: "quad", label: "4 Col", icon: <GridViewIcon fontSize="small" /> },
   ];
 
   return (

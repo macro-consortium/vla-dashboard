@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 
-export type ModuleId =
+export type Telescope = "VLA" | "VLBA";
+
+export type VLAModuleId =
   | "VLAData"
   | "VLANowFrame"
   | "UTCtoLSTConverter"
@@ -9,9 +11,22 @@ export type ModuleId =
   | "VLAScheduleFrame"
   | "VLAAntennaFrame"
   | "VLAWebcam"
-  | "VLAObsLogs";
+  | "VLAObsLogs"
+  | "VLAConfigSchedule"
+  | "VLAPressurePlot";
 
-export type LayoutMode = "auto" | "single" | "double" | "triple";
+export type VLBAModuleId =
+  | "VLBAData"
+  | "VLBAWebcam"
+  | "VLBAScheduleFrame"
+  | "VLBADynamicQueue"
+  | "VLBARecentlyObserved"
+  | "UTCtoLSTConverter"
+  | "LSTtoUTCConverter";
+
+export type ModuleId = VLAModuleId | VLBAModuleId;
+
+export type LayoutMode = "auto" | "single" | "double" | "triple" | "quad";
 
 export interface ModuleSpan {
   col: number;
@@ -21,6 +36,8 @@ export interface ModuleSpan {
 export type ModuleSpans = Partial<Record<ModuleId, ModuleSpan>>;
 
 interface DashboardContextType {
+  telescope: Telescope;
+  setTelescope: (telescope: Telescope) => void;
   moduleOrder: ModuleId[];
   setModuleOrder: (order: ModuleId[]) => void;
   moveModule: (fromIndex: number, toIndex: number) => void;
@@ -35,23 +52,41 @@ interface DashboardContextType {
   setTimeBarExpanded: (expanded: boolean) => void;
 }
 
-const DEFAULT_ORDER: ModuleId[] = [
+const VLA_DEFAULT_ORDER: ModuleId[] = [
   "VLAWebcam",
   "VLANowFrame",
   "VLAData",
   "VLAObsLogs",
   "VLAScheduleFrame",
+  "VLAConfigSchedule",
+  "VLAPressurePlot",
   "UTCtoLSTConverter",
   "VLAAntennaFrame",
   "LSTtoUTCConverter",
 ];
 
-const DEFAULT_SPANS: ModuleSpans = {
-  VLAData: { col: 2, row: 1 },
-  VLAWebcam: { col: 3, row: 1 },
-  VLAScheduleFrame: { col: 2, row: 1 },
-  VLAAntennaFrame: { col: 2, row: 1 },
-  VLAObsLogs: { col: 2, row: 1 },
+const VLBA_DEFAULT_ORDER: ModuleId[] = [
+  "VLBAWebcam",
+  "VLBAData",
+  "VLBAScheduleFrame",
+  "VLBADynamicQueue",
+  "VLBARecentlyObserved",
+  "UTCtoLSTConverter",
+  "LSTtoUTCConverter",
+];
+
+const VLA_DEFAULT_SPANS: ModuleSpans = {
+  VLAData: { col: 4, row: 1 },
+  VLAWebcam: { col: 6, row: 1 },
+  VLAScheduleFrame: { col: 4, row: 1 },
+  VLAAntennaFrame: { col: 4, row: 1 },
+  VLAObsLogs: { col: 4, row: 1 },
+};
+
+const VLBA_DEFAULT_SPANS: ModuleSpans = {
+  VLBAWebcam: { col: 6, row: 1 },
+  VLBAData: { col: 4, row: 1 },
+  VLBAScheduleFrame: { col: 4, row: 1 },
 };
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
@@ -66,15 +101,30 @@ function setCookie(name: string, value: string, days = 365) {
   document.cookie = `${name}=${value}; expires=${expires}; path=/`;
 }
 
+function getDefaultOrder(telescope: Telescope): ModuleId[] {
+  return telescope === "VLA" ? VLA_DEFAULT_ORDER : VLBA_DEFAULT_ORDER;
+}
+
+function getDefaultSpans(telescope: Telescope): ModuleSpans {
+  return telescope === "VLA" ? VLA_DEFAULT_SPANS : VLBA_DEFAULT_SPANS;
+}
+
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [moduleOrder, setModuleOrderState] = useState<ModuleId[]>(() => {
+  // Telescope selection
+  const [telescope, setTelescopeState] = useState<Telescope>(() => {
+    const saved = getCookie("dashboard-telescope");
+    if (saved === "VLA" || saved === "VLBA") return saved;
+    return "VLA";
+  });
+
+  // Separate module orders for VLA and VLBA
+  const [vlaModuleOrder, setVlaModuleOrderState] = useState<ModuleId[]>(() => {
     const saved = getCookie("vla-module-order");
     if (saved) {
       try {
         const parsed = JSON.parse(decodeURIComponent(saved)) as ModuleId[];
-        // Validate that all default modules are present
-        const hasAllModules = DEFAULT_ORDER.every((id) => parsed.includes(id));
-        const hasOnlyValidModules = parsed.every((id) => DEFAULT_ORDER.includes(id));
+        const hasAllModules = VLA_DEFAULT_ORDER.every((id) => parsed.includes(id));
+        const hasOnlyValidModules = parsed.every((id) => VLA_DEFAULT_ORDER.includes(id));
         if (Array.isArray(parsed) && hasAllModules && hasOnlyValidModules) {
           return parsed;
         }
@@ -82,29 +132,44 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         // ignore
       }
     }
-    return DEFAULT_ORDER;
+    return VLA_DEFAULT_ORDER;
+  });
+
+  const [vlbaModuleOrder, setVlbaModuleOrderState] = useState<ModuleId[]>(() => {
+    const saved = getCookie("vlba-module-order");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(saved)) as ModuleId[];
+        const hasAllModules = VLBA_DEFAULT_ORDER.every((id) => parsed.includes(id));
+        const hasOnlyValidModules = parsed.every((id) => VLBA_DEFAULT_ORDER.includes(id));
+        if (Array.isArray(parsed) && hasAllModules && hasOnlyValidModules) {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return VLBA_DEFAULT_ORDER;
   });
 
   const [layoutMode, setLayoutModeState] = useState<LayoutMode>(() => {
-    const saved = getCookie("vla-layout-mode");
-    if (saved === "auto" || saved === "single" || saved === "double" || saved === "triple") return saved;
+    const saved = getCookie("dashboard-layout-mode");
+    if (saved === "auto" || saved === "single" || saved === "double" || saved === "triple" || saved === "quad") return saved;
     return "auto";
   });
 
+  // Combined spans for both telescopes
   const [moduleSpans, setModuleSpansState] = useState<ModuleSpans>(() => {
-    const saved = getCookie("vla-module-spans");
+    const saved = getCookie("dashboard-module-spans");
     if (saved) {
       try {
         const parsed = JSON.parse(decodeURIComponent(saved));
         if (typeof parsed === "object" && parsed !== null) {
-          // Migrate old format (number) to new format ({ col, row })
           const migrated: ModuleSpans = {};
           for (const [key, value] of Object.entries(parsed)) {
             if (typeof value === "number") {
-              // Old format: just a number for col span
               migrated[key as ModuleId] = { col: value, row: 1 };
             } else if (typeof value === "object" && value !== null && "col" in value && "row" in value) {
-              // New format: { col, row }
               migrated[key as ModuleId] = value as ModuleSpan;
             }
           }
@@ -114,43 +179,75 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         // ignore
       }
     }
-    return DEFAULT_SPANS;
+    return { ...VLA_DEFAULT_SPANS, ...VLBA_DEFAULT_SPANS };
   });
 
   const [timeBarSticky, setTimeBarStickyState] = useState<boolean>(() => {
-    const saved = getCookie("vla-timebar-sticky");
+    const saved = getCookie("dashboard-timebar-sticky");
     return saved === "true";
   });
 
   const [timeBarExpanded, setTimeBarExpandedState] = useState<boolean>(() => {
-    const saved = getCookie("vla-timebar-expanded");
+    const saved = getCookie("dashboard-timebar-expanded");
     return saved === "true";
   });
 
+  // Get current module order based on telescope
+  const moduleOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
+
+  // Save cookies on changes
   useEffect(() => {
-    setCookie("vla-module-order", encodeURIComponent(JSON.stringify(moduleOrder)));
-  }, [moduleOrder]);
+    setCookie("dashboard-telescope", telescope);
+  }, [telescope]);
 
   useEffect(() => {
-    setCookie("vla-layout-mode", layoutMode);
+    setCookie("vla-module-order", encodeURIComponent(JSON.stringify(vlaModuleOrder)));
+  }, [vlaModuleOrder]);
+
+  useEffect(() => {
+    setCookie("vlba-module-order", encodeURIComponent(JSON.stringify(vlbaModuleOrder)));
+  }, [vlbaModuleOrder]);
+
+  useEffect(() => {
+    setCookie("dashboard-layout-mode", layoutMode);
   }, [layoutMode]);
 
   useEffect(() => {
-    setCookie("vla-module-spans", encodeURIComponent(JSON.stringify(moduleSpans)));
+    setCookie("dashboard-module-spans", encodeURIComponent(JSON.stringify(moduleSpans)));
   }, [moduleSpans]);
 
   useEffect(() => {
-    setCookie("vla-timebar-sticky", String(timeBarSticky));
+    setCookie("dashboard-timebar-sticky", String(timeBarSticky));
   }, [timeBarSticky]);
 
-  const setModuleOrder = (order: ModuleId[]) => setModuleOrderState(order);
+  useEffect(() => {
+    setCookie("dashboard-timebar-expanded", String(timeBarExpanded));
+  }, [timeBarExpanded]);
+
+  const setTelescope = (t: Telescope) => setTelescopeState(t);
+
+  const setModuleOrder = (order: ModuleId[]) => {
+    if (telescope === "VLA") {
+      setVlaModuleOrderState(order);
+    } else {
+      setVlbaModuleOrderState(order);
+    }
+  };
+
   const setTimeBarSticky = (sticky: boolean) => setTimeBarStickyState(sticky);
+  const setTimeBarExpanded = (expanded: boolean) => setTimeBarExpandedState(expanded);
 
   const moveModule = (fromIndex: number, toIndex: number) => {
-    const newOrder = [...moduleOrder];
+    const currentOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
+    const newOrder = [...currentOrder];
     const [removed] = newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, removed);
-    setModuleOrderState(newOrder);
+
+    if (telescope === "VLA") {
+      setVlaModuleOrderState(newOrder);
+    } else {
+      setVlbaModuleOrderState(newOrder);
+    }
   };
 
   const setLayoutMode = (mode: LayoutMode) => setLayoutModeState(mode);
@@ -163,13 +260,35 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   };
 
   const resetOrder = () => {
-    setModuleOrderState(DEFAULT_ORDER);
-    setModuleSpansState(DEFAULT_SPANS);
+    if (telescope === "VLA") {
+      setVlaModuleOrderState(VLA_DEFAULT_ORDER);
+    } else {
+      setVlbaModuleOrderState(VLBA_DEFAULT_ORDER);
+    }
+    setModuleSpansState((prev) => ({
+      ...prev,
+      ...getDefaultSpans(telescope),
+    }));
   };
 
   return (
     <DashboardContext.Provider
-      value={{ moduleOrder, setModuleOrder, moveModule, layoutMode, setLayoutMode, moduleSpans, setModuleSpan, resetOrder, timeBarSticky, setTimeBarSticky }}
+      value={{
+        telescope,
+        setTelescope,
+        moduleOrder,
+        setModuleOrder,
+        moveModule,
+        layoutMode,
+        setLayoutMode,
+        moduleSpans,
+        setModuleSpan,
+        resetOrder,
+        timeBarSticky,
+        setTimeBarSticky,
+        timeBarExpanded,
+        setTimeBarExpanded,
+      }}
     >
       {children}
     </DashboardContext.Provider>
@@ -182,4 +301,4 @@ export function useDashboard() {
   return ctx;
 }
 
-export { DEFAULT_ORDER };
+export { VLA_DEFAULT_ORDER, VLBA_DEFAULT_ORDER, getDefaultOrder, getDefaultSpans };

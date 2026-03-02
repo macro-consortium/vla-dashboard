@@ -125,28 +125,28 @@ export default function ModuleWrapper({
   const isDropTarget = dragOverIndex === index;
 
   const getColSpanClass = () => {
-    if (maxColumns === 1) return "";
-    switch (colSpan) {
-      case 2:
-        return "lg:col-span-2";
-      case 3:
-        return "xl:col-span-3";
-      default:
-        return "";
-    }
+    if (maxColumns <= 2) return "";
+    const spanClasses: Record<number, string> = {
+      2: "col-span-2",
+      3: "col-span-3",
+      4: "col-span-4",
+      5: "col-span-5",
+      6: "col-span-6",
+      7: "col-span-7",
+      8: "col-span-8",
+    };
+    return spanClasses[colSpan] || "";
   };
 
   const getRowSpanClass = () => {
-    switch (rowSpan) {
-      case 2:
-        return "row-span-2";
-      case 3:
-        return "row-span-3";
-      case 4:
-        return "row-span-4";
-      default:
-        return "";
-    }
+    const spanClasses: Record<number, string> = {
+      2: "row-span-2",
+      3: "row-span-3",
+      4: "row-span-4",
+      5: "row-span-5",
+      6: "row-span-6",
+    };
+    return spanClasses[rowSpan] || "";
   };
 
   return (
@@ -156,7 +156,8 @@ export default function ModuleWrapper({
       onDragOver={(e) => onDragOver(e, index)}
       onDrop={() => onDrop(index)}
       className={`
-        relative w-full rounded-lg shadow-md transition-all duration-200 h-fit
+        relative w-full rounded-lg shadow-md transition-all duration-200 flex flex-col
+        ${rowSpan > 1 ? "h-full" : "h-fit"}
         ${isDark ? "bg-gray-800" : "bg-white"}
         ${isDragging ? "opacity-50 scale-[0.98]" : "opacity-100"}
         ${isDropTarget ? "ring-2 ring-blue-500 ring-offset-2 scale-[1.02]" : ""}
@@ -232,7 +233,7 @@ export default function ModuleWrapper({
                   currentCol={colSpan}
                   currentRow={rowSpan}
                   maxColumns={maxColumns}
-                  maxRows={4}
+                  maxRows={6}
                   onSelect={onSpanChange}
                   onClose={() => setShowSizePicker(false)}
                   isDark={isDark}
@@ -258,7 +259,7 @@ export default function ModuleWrapper({
       </div>
 
       {/* Content */}
-      <div className="p-4 h-full">{children}</div>
+      <div className={`p-4 ${rowSpan > 1 ? "flex-1 flex flex-col min-h-0" : ""}`}>{children}</div>
 
       {/* Visual drop indicator */}
       {isDropTarget && (

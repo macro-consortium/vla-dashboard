@@ -1,0 +1,74 @@
+import { useEffect, useState } from "react";
+import Info from "./Info";
+import { useTheme } from "../context/ThemeContext";
+
+interface ObservationData {
+  telescope: string;
+  proposal_code: string;
+  proposal_title: string;
+  proposal_abstract: string;
+  PI_name: string;
+  PI_institution: string;
+  source_name: string;
+  source_ra: string;
+  source_dec: string;
+}
+
+export default function VLBAData() {
+  const [data, setData] = useState<ObservationData | null>(null);
+  const { isDark } = useTheme();
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(
+        "https://data-query.nrao.edu/accumulator/vlba",
+        {
+          headers: { Accept: "application/json" },
+        }
+      );
+      const result = await response.json();
+      setData(result);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div>
+      <p className={isDark ? "text-gray-300" : "text-gray-700"}>
+        Data from{" "}
+        <a
+          href="https://data-query.nrao.edu/accumulator/vlba"
+          className="text-blue-500 underline hover:text-blue-400"
+        >
+          The ACCUMULATOR
+        </a>
+      </p>
+      {data ? (
+        <div className="space-y-3 mt-4">
+          <Info label="Telescope" value={data.telescope} different={false} />
+          <Info label="Proposal Code" value={data.proposal_code} different={false} />
+          <Info label="Proposal Title" value={data.proposal_title} different={false} />
+          <Info label="Proposal Abstract" value={data.proposal_abstract} different={false} />
+          <Info label="PI Name" value={data.PI_name} different={true} />
+          <Info label="PI Institution" value={data.PI_institution} different={false} />
+          <Info label="Source Name" value={data.source_name} different={true} />
+          <Info label="Source RA" value={data.source_ra} different={false} />
+          <Info label="Source DEC" value={data.source_dec} different={false} />
+        </div>
+      ) : (
+        <p className={isDark ? "text-gray-400" : "text-gray-600"}>Loading...</p>
+      )}
+      <p className={`mt-5 text-md ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+        <span className={`text-lg ${isDark ? "text-gray-300" : "text-gray-700"}`}>Note:</span>{" "}
+        If the VLBA is undergoing maintenance, this data may be out of date.
+      </p>
+    </div>
+  );
+}

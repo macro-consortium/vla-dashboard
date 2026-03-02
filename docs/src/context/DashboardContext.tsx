@@ -63,7 +63,6 @@ const VLA_DEFAULT_ORDER: ModuleId[] = [
   "UTCtoLSTConverter",
   "VLAAntennaFrame",
   "LSTtoUTCConverter",
-  "VLAPressurePlot",
 ];
 
 const VLBA_DEFAULT_ORDER: ModuleId[] = [
@@ -236,7 +235,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   };
 
   const setTimeBarSticky = (sticky: boolean) => setTimeBarStickyState(sticky);
-  const setTimeBarExpanded = (expanded: boolean) => setTimeBarExpandedState(expanded);
   const setTimeBarExpanded = (expanded: boolean) => setTimeBarExpandedState(expanded);
 
   const moveModule = (fromIndex: number, toIndex: number) => {

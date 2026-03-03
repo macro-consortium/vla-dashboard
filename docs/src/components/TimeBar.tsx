@@ -104,18 +104,31 @@ export default function TimeBar() {
     timeBarExpanded, setTimeBarExpanded,
     timeBarLSTLocations, setTimeBarLSTLocations,
     timeBarCivilTimeZones, setTimeBarCivilTimeZones,
-    customLocationCoords, setCustomLocationCoords
+    customLocationCoords, setCustomLocationCoords,
+    timeBarCompactItems, setTimeBarCompactItems
   } = useDashboard();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [lstTimes, setLstTimes] = useState<Record<string, string>>({});
   const [lstLoading, setLstLoading] = useState(true);
   const [showLocationSettings, setShowLocationSettings] = useState(false);
   const [showTimeZoneSettings, setShowTimeZoneSettings] = useState(false);
+  const [showCompactSettings, setShowCompactSettings] = useState(false);
   const [customLatInput, setCustomLatInput] = useState(String(customLocationCoords.lat));
   const [customLonInput, setCustomLonInput] = useState(String(customLocationCoords.lon));
 
   // Get the actual location objects from the selected IDs
   const selectedLocations = timeBarLSTLocations
+    .map((id) => getLocationById(id))
+    .filter((loc): loc is NonNullable<typeof loc> => loc !== undefined);
+
+  // Get LST location IDs from compact bar items
+  const compactLstLocationIds = timeBarCompactItems
+    .filter((item) => item.startsWith("lst:"))
+    .map((item) => item.substring(4));
+
+  // Combine locations from expanded panel and compact bar for fetching
+  const allLstLocationIds = [...new Set([...timeBarLSTLocations, ...compactLstLocationIds])];
+  const allLstLocations = allLstLocationIds
     .map((id) => getLocationById(id))
     .filter((loc): loc is NonNullable<typeof loc> => loc !== undefined);
 
@@ -161,7 +174,7 @@ export default function TimeBar() {
       setLstLoading(true);
       const results: Record<string, string> = {};
       await Promise.all(
-        selectedLocations.map(async (loc) => {
+        allLstLocations.map(async (loc) => {
           // Use custom coordinates for custom location
           const coords = loc.id === "custom"
             ? `${customLocationCoords.lat},${customLocationCoords.lon}`
@@ -176,7 +189,7 @@ export default function TimeBar() {
     updateAllLSTs();
     const interval = setInterval(updateAllLSTs, 60000);
     return () => clearInterval(interval);
-  }, [timeBarLSTLocations, customLocationCoords]);
+  }, [timeBarLSTLocations, timeBarCompactItems, customLocationCoords]);
 
   const addLocation = (id: string) => {
     if (!timeBarLSTLocations.includes(id)) {
@@ -210,6 +223,40 @@ export default function TimeBar() {
     }
   };
 
+  // Compact bar item management
+  const addCompactItem = (item: string) => {
+    if (!timeBarCompactItems.includes(item)) {
+      setTimeBarCompactItems([...timeBarCompactItems, item]);
+    }
+  };
+
+  const removeCompactItem = (item: string) => {
+    if (timeBarCompactItems.length > 1) {
+      setTimeBarCompactItems(timeBarCompactItems.filter((i) => i !== item));
+    }
+  };
+
+  // Get label for a compact item
+  const getCompactItemLabel = (item: string): string => {
+    if (item.startsWith("lst:")) {
+      const locId = item.substring(4);
+      const loc = getLocationById(locId);
+      return loc ? `${loc.shortName} LST` : "LST";
+    }
+    if (item.startsWith("tz:")) {
+      const tz = item.substring(3);
+      const tzDisplay = ALL_TIME_ZONES.find((t) => t.timezone === tz);
+      return tzDisplay?.label || tz;
+    }
+    return item;
+  };
+
+  // Get all available compact items (LST locations + time zones not already in compact)
+  const availableCompactItems = [
+    ...LOCATION_PRESETS.filter((loc) => loc.id !== "custom").map((loc) => `lst:${loc.id}`),
+    ...ALL_TIME_ZONES.map((tz) => `tz:${tz.timezone}`),
+  ].filter((item) => !timeBarCompactItems.includes(item));
+
   const formatTime = (date: Date, timezone: string): string => {
     if (timezone === "UTC") {
       return date.toLocaleTimeString("en-US", {
@@ -238,12 +285,6 @@ export default function TimeBar() {
     });
   };
 
-  // Use first selected location for compact display
-  const primaryLocation = selectedLocations[0];
-  const primaryLst = lstLoading ? "..." : (primaryLocation ? lstTimes[primaryLocation.id] : "--:--:--") || "--:--:--";
-  const utcTime = formatTime(currentTime, "UTC");
-  const primaryPeriod = primaryLocation ? getDayPeriod(currentTime, primaryLocation.timezone) : getDayPeriod(currentTime, "America/Denver");
-
   return (
     <div
       className={`w-full rounded-lg shadow-md overflow-hidden transition-all duration-300 ${
@@ -251,32 +292,65 @@ export default function TimeBar() {
       }`}
     >
       {/* Compact Always-Visible Bar */}
-      <button
-        onClick={() => setTimeBarExpanded(!timeBarExpanded)}
+      <div
         className={`w-full px-4 py-3 flex items-center justify-between transition-colors ${
           isDark ? "hover:bg-gray-700" : "hover:bg-gray-50"
         }`}
       >
-        <div className="flex items-center gap-3 flex-wrap">
-          <TimeDisplay
-            label={primaryLocation ? `${primaryLocation.shortName} LST` : "LST"}
-            time={primaryLst}
-            period={primaryPeriod}
-            isDark={isDark}
-            isLST
-            compact
-          />
-          <TimeDisplay
-            label="UTC"
-            time={utcTime}
-            isDark={isDark}
-            compact
-          />
+        <div className="flex items-center gap-3 flex-wrap cursor-pointer" onClick={() => setTimeBarExpanded(!timeBarExpanded)}>
+          {timeBarCompactItems.map((item) => {
+            if (item.startsWith("lst:")) {
+              const locId = item.substring(4);
+              const loc = getLocationById(locId);
+              const lst = lstLoading ? "..." : (lstTimes[locId] || "--:--:--");
+              const period = loc ? getDayPeriod(currentTime, loc.timezone) : getDayPeriod(currentTime, "America/Denver");
+              return (
+                <TimeDisplay
+                  key={item}
+                  label={loc ? `${loc.shortName} LST` : "LST"}
+                  time={lst}
+                  period={period}
+                  isDark={isDark}
+                  isLST
+                  compact
+                />
+              );
+            }
+            if (item.startsWith("tz:")) {
+              const tz = item.substring(3);
+              const tzDisplay = ALL_TIME_ZONES.find((t) => t.timezone === tz);
+              return (
+                <TimeDisplay
+                  key={item}
+                  label={tzDisplay?.label || tz}
+                  time={formatTime(currentTime, tz)}
+                  period={tz !== "UTC" ? getDayPeriod(currentTime, tz) : undefined}
+                  isDark={isDark}
+                  compact
+                />
+              );
+            }
+            return null;
+          })}
           <span className={`text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>
             {formatDate(currentTime)}
           </span>
         </div>
         <div className={`flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <span
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCompactSettings(!showCompactSettings);
+            }}
+            className={`p-1 rounded transition-colors cursor-pointer ${
+              showCompactSettings
+                ? isDark ? "text-blue-400 hover:bg-gray-600" : "text-blue-600 hover:bg-gray-200"
+                : isDark ? "text-gray-500 hover:bg-gray-600 hover:text-gray-300" : "text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+            }`}
+            title="Configure compact bar"
+          >
+            <SettingsIcon style={{ fontSize: 16 }} />
+          </span>
           <span
             onClick={(e) => {
               e.stopPropagation();
@@ -291,9 +365,75 @@ export default function TimeBar() {
           >
             {timeBarSticky ? <PushPinIcon style={{ fontSize: 16 }} /> : <PushPinOutlinedIcon style={{ fontSize: 16 }} />}
           </span>
-          {timeBarExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
+          <span
+            onClick={() => setTimeBarExpanded(!timeBarExpanded)}
+            className={`p-1 rounded transition-colors cursor-pointer ${
+              isDark ? "hover:bg-gray-600" : "hover:bg-gray-200"
+            }`}
+          >
+            {timeBarExpanded ? <ExpandLessIcon style={{ fontSize: 18 }} /> : <ExpandMoreIcon style={{ fontSize: 18 }} />}
+          </span>
         </div>
-      </button>
+      </div>
+
+      {/* Compact Bar Settings Panel */}
+      {showCompactSettings && (
+        <div className={`px-4 pb-3 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+          <div className={`p-3 rounded-lg mt-3 ${isDark ? "bg-gray-700/50" : "bg-gray-100"}`}>
+            <div className={`text-xs font-medium mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+              Items in Compact Bar:
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {timeBarCompactItems.map((item) => (
+                <span
+                  key={item}
+                  className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs ${
+                    isDark ? "bg-purple-900/40 text-purple-300" : "bg-purple-100 text-purple-700"
+                  }`}
+                >
+                  {getCompactItemLabel(item)}
+                  {timeBarCompactItems.length > 1 && (
+                    <button
+                      onClick={() => removeCompactItem(item)}
+                      className={`ml-0.5 rounded-full p-0.5 transition-colors ${
+                        isDark ? "hover:bg-purple-800" : "hover:bg-purple-200"
+                      }`}
+                      title={`Remove ${getCompactItemLabel(item)}`}
+                    >
+                      <CloseIcon style={{ fontSize: 12 }} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+
+            {availableCompactItems.length > 0 && (
+              <>
+                <div className={`text-xs font-medium mb-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                  Add to Compact Bar:
+                </div>
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                  {availableCompactItems.map((item) => (
+                    <button
+                      key={item}
+                      onClick={() => addCompactItem(item)}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
+                        isDark
+                          ? "bg-gray-600 text-gray-300 hover:bg-gray-500"
+                          : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                      }`}
+                      title={`Add ${getCompactItemLabel(item)}`}
+                    >
+                      <AddIcon style={{ fontSize: 12 }} />
+                      {getCompactItemLabel(item)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expanded Details */}
       <div

@@ -251,6 +251,23 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return { lat: 34.08, lon: -107.62 };
   });
 
+  // Compact bar items - format: "lst:locationId" or "tz:timezone"
+  const DEFAULT_COMPACT_ITEMS = ["lst:vla", "tz:UTC"];
+  const [timeBarCompactItems, setTimeBarCompactItemsState] = useState<string[]>(() => {
+    const saved = getCookie("dashboard-timebar-compact-items");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(saved));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return DEFAULT_COMPACT_ITEMS;
+  });
+
   // Get current module order based on telescope
   const moduleOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
 
@@ -295,6 +312,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setCookie("dashboard-custom-location", encodeURIComponent(JSON.stringify(customLocationCoords)));
   }, [customLocationCoords]);
 
+  useEffect(() => {
+    setCookie("dashboard-timebar-compact-items", encodeURIComponent(JSON.stringify(timeBarCompactItems)));
+  }, [timeBarCompactItems]);
+
   const setTelescope = (t: Telescope) => setTelescopeState(t);
 
   const setModuleOrder = (order: ModuleId[]) => {
@@ -310,6 +331,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const setTimeBarLSTLocations = (locations: string[]) => setTimeBarLSTLocationsState(locations);
   const setTimeBarCivilTimeZones = (timezones: string[]) => setTimeBarCivilTimeZonesState(timezones);
   const setCustomLocationCoords = (coords: { lat: number; lon: number }) => setCustomLocationCoordsState(coords);
+  const setTimeBarCompactItems = (items: string[]) => setTimeBarCompactItemsState(items);
 
   const moveModule = (fromIndex: number, toIndex: number) => {
     const currentOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
@@ -368,6 +390,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setTimeBarCivilTimeZones,
         customLocationCoords,
         setCustomLocationCoords,
+        timeBarCompactItems,
+        setTimeBarCompactItems,
       }}
     >
       {children}

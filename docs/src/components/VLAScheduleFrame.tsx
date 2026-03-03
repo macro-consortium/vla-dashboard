@@ -23,7 +23,7 @@ export default function VLAScheduleFrame() {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-[400px]">
+    <div className="flex flex-col flex-1 min-h-[400px]">
       {/* Tab buttons */}
       <div className="flex mb-3 gap-1 justify-between items-center flex-shrink-0">
         <div className="flex gap-1">
@@ -61,7 +61,7 @@ export default function VLAScheduleFrame() {
 
       <iframe
         src={activeUrl}
-        className={`w-full flex-1 min-h-0 rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
+        className={`w-full flex-1 min-h-[350px] rounded border ${isDark ? "border-gray-600" : "border-gray-300"}`}
         title={`VLA Schedule - ${activeTab === "current" ? "Current" : "Future"}`}
       />
       <p className={`mt-2 flex-shrink-0 ${isDark ? "text-gray-300" : "text-gray-700"}`}>

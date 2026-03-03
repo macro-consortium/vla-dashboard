@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 
 export const VLA_CONFIG_SCHEDULE_URL = "https://science.nrao.edu/facilities/vla/proposing/configpropdeadlines";
@@ -12,7 +13,45 @@ interface ConfigEntry {
 
 // Configuration schedule data - update periodically
 // Dates parsed to enable proper current/future detection
+// Note: Semesters can have multiple configurations (separate entries)
 const CONFIG_SCHEDULE: ConfigEntry[] = [
+  // Historical data (2024)
+  {
+    semester: "2024A",
+    startDate: new Date("2024-01-25"),
+    endDate: new Date("2024-04-22"),
+    configuration: "C",
+    proposalDeadline: "Aug 2, 2023",
+  },
+  {
+    semester: "2024A",
+    startDate: new Date("2024-05-08"),
+    endDate: new Date("2024-09-16"),
+    configuration: "B",
+    proposalDeadline: "Aug 2, 2023",
+  },
+  {
+    semester: "2024B",
+    startDate: new Date("2024-10-18"),
+    endDate: new Date("2025-02-03"),
+    configuration: "A",
+    proposalDeadline: "Jan 31, 2024",
+  },
+  // 2025
+  {
+    semester: "2025A",
+    startDate: new Date("2025-02-25"),
+    endDate: new Date("2025-05-12"),
+    configuration: "D",
+    proposalDeadline: "Jul 31, 2024",
+  },
+  {
+    semester: "2025A",
+    startDate: new Date("2025-05-22"),
+    endDate: new Date("2025-08-18"),
+    configuration: "C",
+    proposalDeadline: "Jul 31, 2024",
+  },
   {
     semester: "2025B",
     startDate: new Date("2025-09-03"),
@@ -20,11 +59,19 @@ const CONFIG_SCHEDULE: ConfigEntry[] = [
     configuration: "B",
     proposalDeadline: "Jan 29, 2025",
   },
+  // 2026
   {
     semester: "2026A",
     startDate: new Date("2026-02-20"),
     endDate: new Date("2026-06-22"),
     configuration: "A",
+    proposalDeadline: "Jul 30, 2025",
+  },
+  {
+    semester: "2026A",
+    startDate: new Date("2026-07-10"),
+    endDate: new Date("2026-10-19"),
+    configuration: "D",
     proposalDeadline: "Jul 30, 2025",
   },
   {
@@ -34,11 +81,19 @@ const CONFIG_SCHEDULE: ConfigEntry[] = [
     configuration: "C",
     proposalDeadline: "Feb 4, 2026",
   },
+  // 2027
   {
     semester: "2027A",
     startDate: new Date("2027-02-24"),
     endDate: new Date("2027-06-07"),
     configuration: "B",
+    proposalDeadline: "Jul 29, 2026",
+  },
+  {
+    semester: "2027A",
+    startDate: new Date("2027-06-18"),
+    endDate: new Date("2027-10-18"),
+    configuration: "A",
     proposalDeadline: "Jul 29, 2026",
   },
   {
@@ -90,6 +145,7 @@ function getConfigDescription(config: string): string {
 
 export default function VLAConfigSchedule() {
   const { isDark } = useTheme();
+  const [showHistory, setShowHistory] = useState(false);
   const today = new Date();
 
   // Find current configuration (today falls within start-end range)
@@ -100,11 +156,20 @@ export default function VLAConfigSchedule() {
   // Find upcoming configurations (start date is in the future)
   const upcomingEntries = CONFIG_SCHEDULE.filter(
     (entry) => entry.startDate > today
-  ).slice(0, 4); // Show next 4
+  );
+
+  // Find past configurations (end date is in the past)
+  const pastEntries = CONFIG_SCHEDULE.filter(
+    (entry) => entry.endDate < today
+  ).reverse(); // Most recent first
 
   // If no current, show the next upcoming as "Next"
   const displayCurrent = currentEntry || upcomingEntries[0];
   const displayUpcoming = currentEntry ? upcomingEntries : upcomingEntries.slice(1);
+
+  // Generate unique keys for entries (semester + config + start date)
+  const getEntryKey = (entry: ConfigEntry) =>
+    `${entry.semester}-${entry.configuration}-${entry.startDate.toISOString()}`;
 
   return (
     <div>
@@ -132,7 +197,7 @@ export default function VLAConfigSchedule() {
 
       {/* Upcoming Schedule */}
       {displayUpcoming.length > 0 && (
-        <div>
+        <div className="mb-4">
           <p className={`text-xs font-medium uppercase tracking-wide mb-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
             Upcoming Configurations
           </p>
@@ -149,7 +214,7 @@ export default function VLAConfigSchedule() {
               <tbody>
                 {displayUpcoming.map((entry) => (
                   <tr
-                    key={entry.semester}
+                    key={getEntryKey(entry)}
                     className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
                   >
                     <td className={`px-3 py-2 font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>
@@ -177,7 +242,55 @@ export default function VLAConfigSchedule() {
         </div>
       )}
 
-      <p className={`mt-3 text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+      {/* Past Configurations (collapsible) */}
+      {pastEntries.length > 0 && (
+        <div className="mb-3">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className={`text-xs font-medium uppercase tracking-wide mb-2 flex items-center gap-1 transition-colors ${
+              isDark ? "text-gray-500 hover:text-gray-400" : "text-gray-400 hover:text-gray-500"
+            }`}
+          >
+            <span>{showHistory ? "▼" : "▶"}</span>
+            Past Configurations ({pastEntries.length})
+          </button>
+          {showHistory && (
+            <div className={`overflow-x-auto rounded border ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+              <table className="w-full text-sm">
+                <thead className={isDark ? "bg-gray-700" : "bg-gray-100"}>
+                  <tr>
+                    <th className={`px-3 py-2 text-left ${isDark ? "text-gray-300" : "text-gray-700"}`}>Semester</th>
+                    <th className={`px-3 py-2 text-left ${isDark ? "text-gray-300" : "text-gray-700"}`}>Config</th>
+                    <th className={`px-3 py-2 text-left ${isDark ? "text-gray-300" : "text-gray-700"}`}>Dates</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pastEntries.map((entry) => (
+                    <tr
+                      key={getEntryKey(entry)}
+                      className={`border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}
+                    >
+                      <td className={`px-3 py-2 font-medium ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+                        {entry.semester}
+                      </td>
+                      <td className={`px-3 py-2`}>
+                        <span className={`font-bold ${getConfigColor(entry.configuration)}`}>
+                          {entry.configuration}
+                        </span>
+                      </td>
+                      <td className={`px-3 py-2 ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        {formatDateRange(entry.startDate, entry.endDate)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      <p className={`text-xs ${isDark ? "text-gray-500" : "text-gray-400"}`}>
         * Some dates may be preliminary.{" "}
         <a
           href={VLA_CONFIG_SCHEDULE_URL}

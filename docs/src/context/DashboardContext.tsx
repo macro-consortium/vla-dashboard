@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
+import { DEFAULT_TIMEBAR_LST_LOCATIONS } from "../data/locationPresets";
 
 export type Telescope = "VLA" | "VLBA";
 
@@ -13,7 +14,8 @@ export type VLAModuleId =
   | "VLAWebcam"
   | "VLAObsLogs"
   | "VLAConfigSchedule"
-  | "VLAPressurePlot";
+  | "VLAPressurePlot"
+  | "TwilightTimes";
 
 export type VLBAModuleId =
   | "VLBAData"
@@ -22,7 +24,8 @@ export type VLBAModuleId =
   | "VLBADynamicQueue"
   | "VLBARecentlyObserved"
   | "UTCtoLSTConverter"
-  | "LSTtoUTCConverter";
+  | "LSTtoUTCConverter"
+  | "TwilightTimes";
 
 export type ModuleId = VLAModuleId | VLBAModuleId;
 
@@ -50,6 +53,14 @@ interface DashboardContextType {
   setTimeBarSticky: (sticky: boolean) => void;
   timeBarExpanded: boolean;
   setTimeBarExpanded: (expanded: boolean) => void;
+  timeBarLSTLocations: string[];
+  setTimeBarLSTLocations: (locations: string[]) => void;
+  timeBarCivilTimeZones: string[];
+  setTimeBarCivilTimeZones: (timezones: string[]) => void;
+  customLocationCoords: { lat: number; lon: number };
+  setCustomLocationCoords: (coords: { lat: number; lon: number }) => void;
+  timeBarCompactItems: string[];
+  setTimeBarCompactItems: (items: string[]) => void;
 }
 
 const VLA_DEFAULT_ORDER: ModuleId[] = [
@@ -60,6 +71,7 @@ const VLA_DEFAULT_ORDER: ModuleId[] = [
   "VLAScheduleFrame",
   "VLAConfigSchedule",
   "VLAPressurePlot",
+  "TwilightTimes",
   "UTCtoLSTConverter",
   "VLAAntennaFrame",
   "LSTtoUTCConverter",
@@ -71,6 +83,7 @@ const VLBA_DEFAULT_ORDER: ModuleId[] = [
   "VLBAScheduleFrame",
   "VLBADynamicQueue",
   "VLBARecentlyObserved",
+  "TwilightTimes",
   "UTCtoLSTConverter",
   "LSTtoUTCConverter",
 ];
@@ -192,6 +205,52 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     return saved === "true";
   });
 
+  const [timeBarLSTLocations, setTimeBarLSTLocationsState] = useState<string[]>(() => {
+    const saved = getCookie("dashboard-timebar-lst-locations");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(saved));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return DEFAULT_TIMEBAR_LST_LOCATIONS;
+  });
+
+  const DEFAULT_CIVIL_TIMEZONES = ["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Phoenix", "America/Los_Angeles"];
+  const [timeBarCivilTimeZones, setTimeBarCivilTimeZonesState] = useState<string[]>(() => {
+    const saved = getCookie("dashboard-timebar-civil-timezones");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(saved));
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return DEFAULT_CIVIL_TIMEZONES;
+  });
+
+  const [customLocationCoords, setCustomLocationCoordsState] = useState<{ lat: number; lon: number }>(() => {
+    const saved = getCookie("dashboard-custom-location");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(saved));
+        if (typeof parsed.lat === "number" && typeof parsed.lon === "number") {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return { lat: 34.08, lon: -107.62 };
+  });
+
   // Get current module order based on telescope
   const moduleOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
 
@@ -224,6 +283,18 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setCookie("dashboard-timebar-expanded", String(timeBarExpanded));
   }, [timeBarExpanded]);
 
+  useEffect(() => {
+    setCookie("dashboard-timebar-lst-locations", encodeURIComponent(JSON.stringify(timeBarLSTLocations)));
+  }, [timeBarLSTLocations]);
+
+  useEffect(() => {
+    setCookie("dashboard-timebar-civil-timezones", encodeURIComponent(JSON.stringify(timeBarCivilTimeZones)));
+  }, [timeBarCivilTimeZones]);
+
+  useEffect(() => {
+    setCookie("dashboard-custom-location", encodeURIComponent(JSON.stringify(customLocationCoords)));
+  }, [customLocationCoords]);
+
   const setTelescope = (t: Telescope) => setTelescopeState(t);
 
   const setModuleOrder = (order: ModuleId[]) => {
@@ -236,6 +307,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const setTimeBarSticky = (sticky: boolean) => setTimeBarStickyState(sticky);
   const setTimeBarExpanded = (expanded: boolean) => setTimeBarExpandedState(expanded);
+  const setTimeBarLSTLocations = (locations: string[]) => setTimeBarLSTLocationsState(locations);
+  const setTimeBarCivilTimeZones = (timezones: string[]) => setTimeBarCivilTimeZonesState(timezones);
+  const setCustomLocationCoords = (coords: { lat: number; lon: number }) => setCustomLocationCoordsState(coords);
 
   const moveModule = (fromIndex: number, toIndex: number) => {
     const currentOrder = telescope === "VLA" ? vlaModuleOrder : vlbaModuleOrder;
@@ -288,6 +362,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         setTimeBarSticky,
         timeBarExpanded,
         setTimeBarExpanded,
+        timeBarLSTLocations,
+        setTimeBarLSTLocations,
+        timeBarCivilTimeZones,
+        setTimeBarCivilTimeZones,
+        customLocationCoords,
+        setCustomLocationCoords,
       }}
     >
       {children}

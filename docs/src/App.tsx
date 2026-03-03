@@ -5,6 +5,7 @@ import VLAData from "./components/VLAData";
 import VLANowFrame from "./components/VLANowFrame";
 import UTCtoLSTConverter from "./components/UTCtoLSTConverter";
 import LSTtoUTCConverter from "./components/LSTtoUTCConverter";
+import TwilightTimes from "./components/TwilightTimes";
 import TimeBar from "./components/TimeBar";
 import VLAScheduleFrame from "./components/VLAScheduleFrame";
 import VLAAntennaFrame, { VLA_ANTENNA_PDF_URL } from "./components/VLAAntennaFrame";
@@ -81,6 +82,10 @@ const MODULE_CONFIGS: Record<string, Omit<ModuleConfig, "id">> = {
     title: "VLA Pressure Plot",
     component: <VLAPressurePlot />,
     popOutUrl: VLA_PRESSURE_PLOT_URL,
+  },
+  TwilightTimes: {
+    title: "Twilight Times",
+    component: <TwilightTimes />,
   },
   // VLBA Modules
   VLBAData: {
@@ -205,7 +210,7 @@ function DashboardContent() {
       <div
         className={`w-full ${
           layoutMode === "single" ? "" : "max-w-7xl 2xl:max-w-[80%]"
-        } grid ${getGridClasses()} gap-6 grid-flow-dense auto-rows-auto`}
+        } grid ${getGridClasses()} gap-6 grid-flow-dense auto-rows-[minmax(320px,auto)]`}
       >
         {moduleOrder.map((moduleId, index) => {
           const config = MODULE_CONFIGS[moduleId];
